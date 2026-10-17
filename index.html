@@ -176,7 +176,8 @@
   <div class="wrap">
     <section class="q" id="q-car">
       <div class="q-head"><span class="q-num">1</span>
-        <div><h2>乗りたい車を選んでください</h2></div></div>
+        <div><h2>乗りたい車を選んでください</h2>
+        <p class="hint">月額は頭金0円・7年契約・年1万kmまで・ボーナス時＋33,000円（年2回）の場合</p></div></div>
       <div class="car-grid" id="car-grid"></div>
     </section>
 
@@ -558,7 +559,7 @@
     var html = "";
     html += '<div class="big reveal"><span class="label">' + car.maker + " " + car.name + ' の維持費は 月々 合計</span><span class="value" id="total-value" data-total="' + total + '">約0円</span></div>';
     if (excluded.length) html += '<p class="excluded">' + excluded.join("・") + "は入れていない金額です</p>";
-    html += '<p class="estimate">入力内容をもとにした目安の金額です。正確な金額は、店舗でのお見積もりでご確認ください。</p>';
+    html += '<p class="estimate">月額は頭金0円・7年契約・年1万kmまで・ボーナス時＋33,000円（年2回）の場合です。満了時に精算がある場合があります。入力内容をもとにした目安で、正確な金額は店舗でのお見積もりでご確認ください。</p>';
 
     html += '<div class="bar" aria-hidden="true">';
     parts.forEach(function (p) { if (p[3] && p[1] > 0) html += '<span style="width:' + (p[1] / total * 100) + "%;background:" + p[2] + '"></span>'; });
@@ -633,7 +634,7 @@
     body.push({ type: "box", layout: "vertical", spacing: "xs", margin: "md", contents: rows });
     body.push({ type: "box", layout: "vertical", margin: "md", paddingAll: "8px", cornerRadius: "6px", backgroundColor: "#fff0f6",
       contents: [{ type: "text", text: "税金・車検・オイル交換の費用は月額に含まれています", size: "xs", color: "#c23f78", wrap: true }] });
-    body.push({ type: "text", text: "入力内容をもとにした目安です。正確な金額はお見積もりでご確認ください。", size: "xxs", color: "#999999", wrap: true, margin: "md" });
+    body.push({ type: "text", text: "月額は頭金0円・7年契約・年1万kmまでの場合。満了時に精算がある場合があります。入力内容をもとにした目安です。正確な金額はお見積もりでご確認ください。", size: "xxs", color: "#999999", wrap: true, margin: "md" });
 
     var footer = [{ type: "button", style: "primary", color: "#e85f96", height: "sm", action: { type: "uri", label: car.name + "の実車を見に行く", uri: RESERVE_URL } }];
     if (TOOL_URL) footer.push({ type: "button", style: "secondary", height: "sm", action: { type: "uri", label: "条件を変えて計算する", uri: TOOL_URL } });
