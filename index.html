@@ -63,8 +63,8 @@
     font-size: 19px; font-weight: 800; color: var(--ink); box-shadow: inset 0 1px 3px rgba(48, 38, 45, .08); }
   #f7sim .field:focus { outline: 3px solid #f6c3d8; border-color: var(--accent); }
   #f7sim .field::placeholder { color: #c4b3bc; font-weight: 600; }
-  #f7sim select.field { width: 100%; padding-right: 40px; font-size: 17px; cursor: pointer;
-    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%23c23f78' stroke-width='2.4'/%3E%3C/svg%3E") no-repeat right 14px center; }
+  #f7sim select.field { width: 100%; padding: 0 34px 0 12px; font-size: 17px; cursor: pointer;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%23c23f78' stroke-width='2.4'/%3E%3C/svg%3E") no-repeat right 12px center; }
   #f7sim select.field.sub { height: 48px; border-width: 1.5px; border-color: #e3cdd8; font-size: 16px; font-weight: 700; color: var(--accent-dark); }
   #f7sim .custom { display: flex; align-items: center; gap: 8px; }
   #f7sim .custom input.field { width: 11em; max-width: 100%; text-align: right; }
@@ -182,7 +182,7 @@
 
     <section class="q" id="q-opt">
       <div class="q-head"><span class="q-num opt">任意</span>
-        <div><h2>オプション</h2><p class="hint">つけない方はそのまま次へ</p></div></div>
+        <div><h2>オプション</h2><p class="hint">金額は月額です。つけない方はそのまま次へ</p></div></div>
       <div class="opts" id="opts">
         <label class="opt-row"><span>オーディオ・ナビ</span><select class="field" data-opt="audio"></select></label>
         <label class="opt-row"><span>ドライブレコーダー</span><select class="field" data-opt="recorder"></select></label>
@@ -218,14 +218,13 @@
       <div class="ref">
         <select class="field sub" data-ref="fuel" aria-label="目安から入れる">
           <option value="">▸ 目安から入れる</option>
-          <option value="200">約200km　買い物・送り迎え中心</option>
-          <option value="450">約450km　毎日の通勤（片道10km）</option>
-          <option value="600">約600km　通勤＋週末のお出かけ</option>
+          <option value="200">約200km　買い物・送り迎え</option>
+          <option value="450">約450km　毎日の通勤</option>
+          <option value="600">約600km　通勤＋お出かけ</option>
         </select>
       </div>
       <div class="chips" data-key="fuel"></div>
       <div class="custom gas"><label for="in-gas">ガソリン単価</label><input class="field" id="in-gas" inputmode="numeric" aria-label="ガソリン単価"><span class="unit">円/L</span></div>
-      <p class="note-sm" id="gas-note"></p>
     </section>
 
     <div class="calc">
@@ -285,7 +284,6 @@
     insurance: 4300,
     // 福岡県のレギュラーガソリン平均 170.2円/L（資源エネルギー庁「石油製品価格調査」2026年10月13日調査）。毎週変わるので月1回ほど更新する
     gas: 170,
-    gasDate: "10月13日",
     sources: [
       "駐車場の相場は、アットパーキングに掲載の月極駐車場の賃料を区・町ごとに集め、中央値を500円単位で丸めた目安です（2026年10月17日時点）。区全体の相場ではありません。",
       "「わからない」を選んだ場合の保険料4,300円は、軽自動車の任意保険の全国平均（損害保険料率算出機構「自動車保険の概況」2025年度版）をもとにした目安です。年齢や等級で大きく変わります。",
@@ -393,7 +391,7 @@
   ["audio", "recorder"].forEach(function (group) {
     var sel = document.querySelector('select[data-opt="' + group + '"]');
     sel.innerHTML = OPTIONS[group].map(function (o) {
-      return '<option value="' + o[0] + '">' + o[1] + (o[2] ? "（＋" + yen(o[2]) + "/月）" : "") + "</option>";
+      return '<option value="' + o[0] + '">' + o[1] + (o[2] ? " ＋" + yen(o[2]) : "") + "</option>";
     }).join("");
     sel.addEventListener("change", function () { state[group] = sel.value; onChange(); });
   });
@@ -694,7 +692,6 @@
   /* ---------- はじめの状態 ---------- */
   markOptions();
   document.getElementById("in-gas").value = DEFAULTS.gas;
-  document.getElementById("gas-note").textContent = "福岡県の平均（" + DEFAULTS.gasDate + "）・書きかえできます";
   onChange();
   document.getElementById("calc-btn").addEventListener("click", calculate);
 })();
