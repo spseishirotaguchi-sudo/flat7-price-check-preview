@@ -8,8 +8,9 @@
 </head>
 <body>
 <style>
-  /* 乗りたい車を選び、オプション・駐車場・保険・ガソリン代を足して「この車の維持費は月々いくら」を出す。
-     1ページで上から答え、答えるたびに下の結果が変わる。色は既存の料金シミュレーションに合わせる（ピンク系）。文字は15px以上 */
+  /* 乗りたい車を選び、オプション・駐車場・ガソリン代を足して「この車の維持費は月々いくら」を出す。
+     任意保険は年齢・等級・補償で大きく変わるので足さず、「＋任意保険」とだけ出す。
+     1ページで上から答え、一度計算したあとは答えを変えるたびに下の結果が変わる。色は既存の料金シミュレーションに合わせる（ピンク系）。文字は15px以上 */
   #f7sim {
     --ink: #30262d;
     --muted: #806d78;
@@ -23,7 +24,6 @@
     --car: #e85f96;
     --opt: #f29bbf;
     --park: #7a9cc6;
-    --insure: #9b8ac4;
     --fuel: #e0a458;
     box-sizing: border-box;
     color: var(--ink);
@@ -104,6 +104,7 @@
   #f7sim .waiting { color: var(--muted); font-weight: 700; }
   #f7sim .big { display: grid; gap: 2px; }
   #f7sim .big .label { font-size: 16px; font-weight: 700; color: var(--muted); }
+  #f7sim .big .plus { display: inline-block; white-space: nowrap; font-size: 19px; font-weight: 800; color: var(--ink); margin-left: 4px; }
   #f7sim .big .value { font-size: 34px; font-weight: 900; color: var(--accent-dark); line-height: 1.2; font-variant-numeric: tabular-nums; }
   #f7sim .excluded { font-size: 16px; font-weight: 700; color: #a33; }
   #f7sim .estimate { font-size: 15px; color: var(--muted); }
@@ -145,7 +146,6 @@
   #f7sim .reveal { animation: f7in .5s ease-out both; }
   @keyframes f7in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
   #f7sim .stale { background: var(--warning); border-radius: 10px; padding: 10px 14px; font-weight: 700; display: grid; gap: 8px; }
-  #f7sim .stale button { appearance: none; border: 1.5px solid var(--accent); background: #fff; color: var(--accent-dark); border-radius: 10px; padding: 10px; font-weight: 800; cursor: pointer; }
   #f7sim .result.is-stale #result-body > *:not(.stale) { opacity: .35; }
   #f7sim .cta a small { display: block; font-size: 15px; font-weight: 700; opacity: .92; margin-top: 2px; }
   @media (prefers-reduced-motion: reduce) { #f7sim .calc-btn:not(:disabled), #f7sim .reveal, #f7sim .spinner { animation: none; } }
@@ -169,7 +169,7 @@
     <img src="assets/hero.jpg" alt="">
     <div class="hero-inner">
       <h1>この車、維持費は月々いくら？<br>維持費シミュレーション</h1>
-      <p>車を選んで、駐車場・保険・走る距離を入れるだけ。月々の合計がわかります。</p>
+      <p>車を選んで、駐車場と走る距離を入れるだけ。月々の合計がわかります。</p>
     </div>
   </header>
 
@@ -203,16 +203,8 @@
       <div class="chips" data-key="parking"></div>
     </section>
 
-    <section class="q" id="q-insurance">
-      <div class="q-head"><span class="q-num">3</span>
-        <div><h2>車の保険料（任意保険）は月いくらですか？</h2>
-        <p class="hint">年払いなら12で割った金額</p></div></div>
-      <div class="custom"><input class="field" inputmode="numeric" data-key="insurance" placeholder="例 5000" aria-label="保険料"><span class="unit">円</span></div>
-      <div class="chips" data-key="insurance"></div>
-    </section>
-
     <section class="q" id="q-fuel">
-      <div class="q-head"><span class="q-num">4</span>
+      <div class="q-head"><span class="q-num">3</span>
         <div><h2>月にどのくらい車で走りますか？</h2>
         <p class="hint">ガソリン代の計算に使います</p></div></div>
       <div class="custom"><input class="field" inputmode="numeric" data-key="fuel" placeholder="例 450" aria-label="月の走行距離"><span class="unit">km</span></div>
@@ -279,15 +271,12 @@
     extra: [["etc", "ETC", 400], ["camera", "バックカメラ", 500]]
   };
 
-  /* 「わからない」を選んだときの目安と、ガソリン単価（出典は結果の注釈に表示） */
+  /* ガソリン単価の初期値と、注釈に出す出典 */
   var DEFAULTS = {
-    // 任意保険の目安：全国・軽四輪乗用車 年51,059円÷12（損害保険料率算出機構「自動車保険の概況 2025年度版」第13表の保険料合計÷台数）
-    insurance: 4300,
     // 福岡県のレギュラーガソリン平均 170.2円/L（資源エネルギー庁「石油製品価格調査」2026年10月13日調査）。毎週変わるので月1回ほど更新する
     gas: 170,
     sources: [
       "駐車場の相場は、アットパーキングに掲載の月極駐車場の賃料を区・町ごとに集め、中央値を500円単位で丸めた目安です（2026年10月17日時点）。区全体の相場ではありません。",
-      "「わからない」を選んだ場合の保険料4,300円は、軽自動車の任意保険の全国平均（損害保険料率算出機構「自動車保険の概況」2025年度版）をもとにした目安です。年齢や等級で大きく変わります。",
       "ガソリン単価の初期値は、福岡県のレギュラー平均（資源エネルギー庁「石油製品価格調査」2026年10月13日調査）です。"
     ]
   };
@@ -323,24 +312,35 @@
   }
   function post(payload) {
     return Promise.resolve(null); // 確認用の版：スプレッドシートには記録しない
-    return fetch(SAVE_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) })
+    return fetch(SAVE_URL, { method: "POST", keepalive: true, headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) })
       .then(function (res) { return res.json(); });
   }
   function saveCost(car, opts, optSum, total) {
     lastLogId = null;
-    var raw = function (key) { var it = item[key]; return it.mode === "input" ? it.value : it.mode; }; // 数字／"unknown"／"exclude"
+    var raw = function (key) { var it = item[key]; return it.mode === "input" ? it.value : it.mode; }; // 数字／"exclude"
     var logPromise = liffReady.then(function (ok) {
       var idToken = ok && liff.isLoggedIn() ? liff.getIDToken() : "";
       return post({
         action: "cost", idToken: idToken || "", inLine: !!(ok && liff.isInClient()), anonId: anonId(),
         car: car.name, price: car.price, options: opts.map(function (o) { return o[0]; }).join("・"), optSum: optSum,
-        parking: raw("parking"), insurance: raw("insurance"), km: raw("fuel"),
+        // 任意保険は合計に入れないので「入れない」として記録する（記録先の GAS は保険料の列を必須にしているため）
+        parking: raw("parking"), insurance: "exclude", km: raw("fuel"),
         gas: gasPrice(), fuel: amount("fuel", car), total: total
       });
     }).then(function (res) { if (res && res.ok) lastLogId = res.logId; return lastLogId; }).catch(function () { return null; });
     return logPromise;
   }
   var lastLogPromise = Promise.resolve(null);
+  /* 計算したあとに答えを変えたときは、変えるたびに記録すると行が増えすぎるので、変更が止まって3秒たってから1行だけ記録する。
+     LINEに送るとき・ページを閉じるときは、待たずにすぐ記録する */
+  var LOG_WAIT = 3000, logTimer = null, pendingLog = null;
+  function flushLog() {
+    clearTimeout(logTimer);
+    if (!pendingLog) return;
+    var f = pendingLog; pendingLog = null;
+    lastLogPromise = f();
+  }
+  window.addEventListener("pagehide", flushLog);
 
   function canSendTalk() {
     if (!window.liff || !liff.isInClient()) return false;
@@ -348,11 +348,11 @@
     return !!ctx && ctx.type === "utou";
   }
 
-  var LABEL = { parking: "駐車場代", insurance: "保険料", fuel: "ガソリン代" };
-  // 駐車場・保険・ガソリンは、それぞれ「数字を入力」「わからない（目安）」「入れない」のどれか（mode: input / unknown / exclude）
-  var item = { parking: { mode: null, value: null }, insurance: { mode: null, value: null }, fuel: { mode: null, value: null } };
+  var LABEL = { parking: "駐車場代", fuel: "ガソリン代" };
+  // 駐車場・ガソリンは、それぞれ「数字を入力」「入れない」のどちらか（mode: input / exclude）
+  var item = { parking: { mode: null, value: null }, fuel: { mode: null, value: null } };
   var state = { car: null, audio: "none", recorder: "none", extra: {}, gas: null };
-  var calc = { done: false, stale: false }; // 計算ボタンを押したか／押したあとに条件が変わったか
+  var calc = { done: false, timer: null }; // 計算ボタンを押したか／答えを変えたあとの結果の更新待ち
 
   function yen(n) { return Math.round(n).toLocaleString("ja-JP") + "円"; }
   // 入力を数字にする。全角数字・カンマ・「円」「km」・「3万」「1.5万」に対応。数字が無ければ未入力（null）
@@ -424,12 +424,12 @@
     return list;
   }
 
-  /* ---------- 駐車場・保険・走行距離：入力／わからない／入れない ---------- */
-  ["parking", "insurance", "fuel"].forEach(function (key) {
+  /* ---------- 駐車場・走行距離：入力／入れない ---------- */
+  ["parking", "fuel"].forEach(function (key) {
     var box = document.querySelector('.chips[data-key="' + key + '"]');
     var input = document.querySelector('input[data-key="' + key + '"]');
     var ref = document.querySelector('select[data-ref="' + key + '"]'); // 相場・目安のプルダウン（駐車場・走行距離）
-    var modes = key === "insurance" ? [["unknown", "わからない", "目安で計算"], ["exclude", "入れない", "今回は考えない"]] : [["exclude", "入れない", "今回は考えない"]];
+    var modes = [["exclude", "入れない", "今回は考えない"]];
     modes.forEach(function (m) {
       var b = document.createElement("button");
       b.type = "button"; b.className = "chip"; b.dataset.mode = m[0];
@@ -473,12 +473,11 @@
   function fuelOf(car, km) { return Math.round(km / car.real * gasPrice() / 10) * 10; }
   function amount(key, car) {
     var it = item[key];
-    if (it.mode !== "input" && it.mode !== "unknown") return 0; // 入れない・未回答
-    if (key === "fuel") return fuelOf(car, it.value);
-    return it.mode === "unknown" ? DEFAULTS[key] : it.value;
+    if (it.mode !== "input") return 0; // 入れない・未回答
+    return key === "fuel" ? fuelOf(car, it.value) : it.value;
   }
   function totalFor(car, optSum) {
-    return car.price + optSum + amount("parking", car) + amount("insurance", car) + amount("fuel", car);
+    return car.price + optSum + amount("parking", car) + amount("fuel", car);
   }
 
   /* ---------- 結果 ---------- */
@@ -486,31 +485,42 @@
     var need = [];
     if (state.car === null) need.push("車");
     if (item.parking.mode === null) need.push("駐車場代");
-    if (item.insurance.mode === null) need.push("保険料");
     if (item.fuel.mode === null) need.push("走行距離");
     return need;
   }
 
-  /* 入力が変わったとき：計算ボタンの状態を更新。計算済みなら「条件が変わりました」を出す */
+  /* 入力が変わったとき：計算ボタンの状態を更新。計算したあとはボタンを隠し、答えを変えるとすぐ結果に反映する */
   function updateButton() {
     var need = missing();
     var btn = document.getElementById("calc-btn"), note = document.getElementById("calc-note");
     btn.disabled = need.length > 0;
-    btn.textContent = calc.done ? "もう一度計算する" : "維持費を計算する";
-    note.textContent = need.length ? "あと " + need.join("・") + " を入れると計算できます" : "";
+    btn.hidden = calc.done;
+    if (need.length) note.textContent = "あと " + need.join("・") + " を入れると" + (calc.done ? "、結果に反映されます" : "計算できます");
+    else note.textContent = calc.done ? "答えを変えると、下の結果にすぐ反映されます" : "";
   }
   function onChange() {
     updateButton();
-    if (calc.done && !calc.stale) {
-      calc.stale = true;
-      var res = document.getElementById("result");
+    if (!calc.done) return;
+    clearTimeout(calc.timer);
+    calc.timer = setTimeout(refresh, 300); // 数字を打っている途中で毎回描き直さない
+  }
+  /* 計算したあとの更新：答えがそろっていれば描き直す。欠けていれば前の結果を薄くして、何が足りないかを出す */
+  function refresh() {
+    var res = document.getElementById("result"), out = document.getElementById("result-body");
+    var need = missing();
+    var old = out.querySelector(".stale");
+    if (old) old.remove();
+    if (need.length) {
       res.classList.add("is-stale");
       var banner = document.createElement("div");
       banner.className = "stale";
-      banner.innerHTML = "<p>条件が変わりました。新しい条件で計算し直してください。</p><button type=\"button\">もう一度計算する</button>";
-      banner.querySelector("button").addEventListener("click", calculate);
-      document.getElementById("result-body").prepend(banner);
+      banner.innerHTML = "<p>あと " + need.join("・") + " を入れると、結果に反映されます</p>";
+      out.prepend(banner);
+      return;
     }
+    res.classList.remove("is-stale");
+    render(true);
+    countUp(document.getElementById("total-value"), 0);
   }
 
   /* 「維持費を計算する」：少し待ってから、合計の数字を0から数え上げて見せる */
@@ -523,7 +533,7 @@
     var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     setTimeout(function () {
       render();
-      calc.done = true; calc.stale = false;
+      calc.done = true;
       updateButton();
       countUp(document.getElementById("total-value"), reduce ? 0 : 900);
     }, reduce ? 0 : 1100);
@@ -539,25 +549,25 @@
     }, 30);
   }
 
-  function render() {
+  function render(logLater) {
     var out = document.getElementById("result-body");
     var car = CARS[state.car];
     var opts = optionList();
     var optSum = opts.reduce(function (s, o) { return s + o[1]; }, 0);
     var total = totalFor(car, optSum);
-    var excluded = ["parking", "insurance", "fuel"].filter(function (k) { return item[k].mode === "exclude"; }).map(function (k) { return LABEL[k]; });
+    var excluded = ["parking", "fuel"].filter(function (k) { return item[k].mode === "exclude"; }).map(function (k) { return LABEL[k]; });
 
     // [表示名, 金額, 色, 合計に入れているか, 補足（画面では表示名の下に小さく、LINEのカードではかっこ書き）]
     var parts = [
       ["車の月額", car.price, "var(--car)", true, "ボーナス時 ＋33,000円・年2回"],
       ["オプション", optSum, "var(--opt)", optSum > 0, opts.map(function (o) { return o[0]; }).join("・")],
-      [LABEL.parking + (item.parking.mode === "unknown" ? "（目安）" : ""), amount("parking", car), "var(--park)", item.parking.mode !== "exclude", ""],
-      [LABEL.insurance + (item.insurance.mode === "unknown" ? "（目安）" : ""), amount("insurance", car), "var(--insure)", item.insurance.mode !== "exclude", ""],
+      [LABEL.parking, amount("parking", car), "var(--park)", item.parking.mode !== "exclude", ""],
       [LABEL.fuel, amount("fuel", car), "var(--fuel)", item.fuel.mode !== "exclude", item.fuel.mode === "input" ? "月" + item.fuel.value + "km・実燃費" + car.real + "km/L" : ""]
     ];
 
     var html = "";
-    html += '<div class="big reveal"><span class="label">' + car.maker + " " + car.name + ' の維持費は 月々 合計</span><span class="value" id="total-value" data-total="' + total + '">約0円</span></div>';
+    html += '<div class="big reveal"><span class="label">' + car.maker + " " + car.name + ' の維持費は 月々 合計</span><span class="value"><span id="total-value" data-total="' + total + '">約0円</span><span class="plus">＋任意保険</span></span></div>';
+    html += '<p class="estimate">任意保険は、年齢や等級で金額が大きく変わるため、合計に入れていません。</p>';
     if (excluded.length) html += '<p class="excluded">' + excluded.join("・") + "は入れていない金額です</p>";
     html += '<p class="estimate">月額は頭金0円・7年契約・年1万kmまで・ボーナス時＋33,000円（年2回）の場合です。満了時に精算がある場合があります。入力内容をもとにした目安で、正確な金額は店舗でのお見積もりでご確認ください。</p>';
 
@@ -571,6 +581,7 @@
       html += '<div class="row' + (p[3] ? "" : " off") + '"><span><i class="sw" style="background:' + p[2] + '"></i>' + p[0] +
         (p[4] && p[3] ? '<small class="sub">' + p[4] + "</small>" : "") + "</span><b>" + (p[3] ? yen(p[1]) : "入れていない") + "</b></div>";
     });
+    html += '<div class="row off"><span><i class="sw" style="background:var(--line)"></i>任意保険</span><b>別途</b></div>';
     html += '<div class="row total"><span>合計（月々）</span><b>約' + yen(total) + "</b></div></div>";
 
     if (item.fuel.mode === "input" && item.fuel.value > CONTRACT_KM_MONTH) {
@@ -602,6 +613,7 @@
     html += "<p>※ 車の月額は、頭金0円・7年契約・ボーナス時33,000円（税込、年2回）の場合の金額です（税込）。ボーナスなしのプランもあります。</p>";
     html += "<p>※ 月額は年間走行距離1万kmの契約の場合。2WDの価格です。リース満了時の査定額が残価を下回った場合、差額のご負担があります（オープンエンド方式）。</p>";
     html += "<p>※ ガソリン代は、実際に走った方の燃費（実燃費）の平均で計算した目安です。e燃費に投稿された燃費の平均（2026年10月時点）を使っています（ムーヴはみんカラの燃費平均、ラパンは投稿が少ないため推定値）。メーカー公表の燃費（WLTCモード）は" + car.name + "で" + car.fuel + "km/Lです。実際の燃費は、季節や走り方で変わります。</p>";
+    html += "<p>※ 任意保険は、年齢・等級・補償の内容で金額が大きく変わるため、合計に含めていません。保険のご案内は店舗でいたします。</p>";
     html += "<p>※ 自動車税は軽自動車（自家用・乗用、2015年4月以降に新車登録）の年額。車検代・オイル交換の金額は店舗での目安です。</p>";
     if (car.cargo) html += "<p>※ " + car.name + "は軽貨物（4ナンバー）のため、購入した場合の税額や車検の時期は上の比較と異なります。</p>";
     DEFAULTS.sources.forEach(function (s) { html += "<p>※ " + s + "</p>"; });
@@ -609,7 +621,10 @@
 
     out.innerHTML = html;
 
-    lastLogPromise = saveCost(car, opts, optSum, total);
+    pendingLog = function () { return saveCost(car, opts, optSum, total); };
+    clearTimeout(logTimer);
+    if (logLater) logTimer = setTimeout(flushLog, LOG_WAIT);
+    else flushLog();
     var flex = buildFlex(car, parts, total, excluded);
     document.getElementById("send-btn").addEventListener("click", function () { showSample(flex); });
     document.getElementById("send-wrap").hidden = false; // 確認用：常に表示
@@ -627,7 +642,8 @@
       { type: "text", text: "維持費シミュレーションの結果", size: "xs", color: "#806d78" },
       { type: "text", text: car.maker + " " + car.name + (car.grade ? " " + car.grade : ""), weight: "bold", size: "lg", wrap: true },
       { type: "text", text: "維持費 月々 合計", size: "xs", color: "#806d78", margin: "md" },
-      { type: "text", text: "約" + yen(total), weight: "bold", size: "xxl", color: "#c23f78" }
+      { type: "text", text: "約" + yen(total), weight: "bold", size: "xxl", color: "#c23f78" },
+      { type: "text", text: "＋任意保険（人によって大きく変わるため、合計に入れていません）", size: "xs", color: "#30262d", wrap: true }
     ];
     if (excluded.length) body.push({ type: "text", text: excluded.join("・") + "は入れていません", size: "xs", color: "#aa3333", wrap: true });
     body.push({ type: "separator", margin: "md" });
@@ -641,7 +657,7 @@
 
     return {
       type: "flex",
-      altText: "維持費シミュレーション：" + car.name + " 月々 約" + yen(total),
+      altText: "維持費シミュレーション：" + car.name + " 月々 約" + yen(total) + "＋任意保険",
       contents: {
         type: "bubble",
         hero: { type: "image", url: new URL(car.img, location.href).href, size: "full", aspectRatio: "20:13", aspectMode: "fit", backgroundColor: "#ffffff" },
@@ -680,6 +696,7 @@
   function sendFlex(flex) {
     var btn = document.getElementById("send-btn");
     btn.disabled = true;
+    flushLog(); // 答えを変えた直後でも、送る内容の記録を先に作る
     liff.sendMessages([flex]).then(function () {
       btn.textContent = "✓ LINEに送りました";
       lastLogPromise.then(function (logId) { if (logId) post({ action: "costSent", logId: logId }).catch(function () {}); });
